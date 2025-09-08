@@ -1,12 +1,12 @@
 name: Build and Deploy to Branch
 
 permissions:
-  contents: write   # ให้สิทธิ์ push กลับไปที่ repo
+  contents: write
 
 on:
   push:
     branches:
-      - main   # รันเมื่อ push มาที่ main
+      - master  # รัน workflow ทุกครั้งที่ push โค้ดไป master
 
 jobs:
   build:
@@ -35,23 +35,17 @@ jobs:
 
       - name: Push build to deploy branch
         env:
-          BUILD_DIR: dist   # 👈 ถ้า project ของเก่งได้ output เป็น build/ ให้แก้ตรงนี้
+          BUILD_DIR: dist
         run: |
-          # ตรวจว่ามีไฟล์ build จริงไหม
           if [ ! -d "$BUILD_DIR" ]; then
-            echo "Build folder '$BUILD_DIR' not found!"
+            echo "Build folder not found!"
             exit 1
           fi
-
-          # copy ไฟล์ build ไปที่โฟลเดอร์ชั่วคราว
           cp -r $BUILD_DIR ../output
-
           cd ../output
           git init
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
           git commit -m "Deploy build from $GITHUB_SHA"
-
-          # push force ไป branch deploy
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" master:deploy
